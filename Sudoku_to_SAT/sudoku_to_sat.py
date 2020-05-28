@@ -175,7 +175,8 @@ def gen_vars(n, symbols):
             # iterate through all the symbols
             for v in symbols:
                 # create the variable
-                var = "cell_has_value([%d, %d], %c)" % (i, j, v)
+                var = "cell_has_value([%d, %d], %c)" % (i + 1, j + 1, v)
+                print var
                 # store in the dictionary it's corresponding number
                 varMap[var] = gvi(var)
 
@@ -212,4 +213,5 @@ if __name__ == '__main__':
     print cell_values
 
     variables = gen_vars(n, symbols)
-    print variables
+    print 'test'
+    # print variables
