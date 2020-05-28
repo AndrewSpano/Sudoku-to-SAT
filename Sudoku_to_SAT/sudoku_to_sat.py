@@ -32,6 +32,27 @@ def gvi(name):
     return gbi
 
 
+
+
+
+# functions that returns true if the input for the sudoku is ok; else returns false
+def check_input(n, rows_per_block, columns_per_block):
+    # check for negative values
+    if n <= 0 or rows_per_block <= 0 or columns_per_block <= 0:
+        print "\nError in the input file: The sizes in the first line must be positive.\n"
+        return False
+    # check for invalid block size values
+    elif n != rows_per_block * columns_per_block:
+        print "\nError in the input file: The product of the lengths of the sides of the block have \
+                 to be equal to the dimension of the grid, that is: n = rows_per_block * columns_per_block.\n"
+        return False
+
+    # everything is ok
+    return True
+
+
+
+
 # function that returns the input from the file in a meaningful way
 def parse_input(input_file_name = "input_sudoku.txt"):
 
@@ -52,8 +73,7 @@ def parse_input(input_file_name = "input_sudoku.txt"):
 
     # get the correct values
     n, rows_per_block, columns_per_block = first_line
-    if n <= 0 or rows_per_block <= 0 or columns_per_block <= 0:
-        print "\nError in the input file: The sizes in the first line must be positive.\n"
+    if check_input(n, rows_per_block, columns_per_block) == False:
         # close the file
         input_file.close()
         # abort
@@ -95,7 +115,7 @@ def parse_input(input_file_name = "input_sudoku.txt"):
         for j in range(1, n + 1):
 
             # if we have finished the block, then the input file has a '|', so skip it
-            if (position - columns_per_block * 2) % (2 * (columns_per_block + 1)) == 0:
+            if (position - columns_per_block * 2) % (2 * (columns_per_block + 1)) == 0 and columns_per_block > 1:
                 position = position + 2
 
             # if we read a dash (empty cell), increment the position and proceed
@@ -118,7 +138,7 @@ def parse_input(input_file_name = "input_sudoku.txt"):
 
 
         # after a block finishes, we have a line of just dashes (---), so skip it
-        if i % rows_per_block == 0 and i < n:
+        if i % rows_per_block == 0 and i < n and rows_per_block > 1:
             line = input_file.readline()
 
     # make sure that the file has finished
@@ -141,6 +161,7 @@ def parse_input(input_file_name = "input_sudoku.txt"):
 
 
 
+
 # function that generates the variables of the problem, which are: cell_has_value(i, j, v) for i,j \in {1, .., n} and v \in symbols
 def gen_vars(n, symbols):
 
@@ -154,7 +175,7 @@ def gen_vars(n, symbols):
             # iterate through all the symbols
             for v in symbols:
                 # create the variable
-                var = "cell_has_value(%d, %d, %c)" % (i, j, v)
+                var = "cell_has_value([%d, %d], %c)" % (i, j, v)
                 # store in the dictionary it's corresponding number
                 varMap[var] = gvi(var)
 
@@ -189,3 +210,6 @@ if __name__ == '__main__':
     print columns_per_block
     print symbols
     print cell_values
+
+    variables = gen_vars(n, symbols)
+    print variables
