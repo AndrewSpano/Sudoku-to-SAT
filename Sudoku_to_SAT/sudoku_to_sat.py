@@ -176,7 +176,6 @@ def gen_vars(n, symbols):
             for v in symbols:
                 # create the variable
                 var = "cell_has_value([%d, %d], %c)" % (i + 1, j + 1, v)
-                print var
                 # store in the dictionary it's corresponding number
                 varMap[var] = gvi(var)
 
@@ -184,6 +183,68 @@ def gen_vars(n, symbols):
     return varMap
 
 
+
+
+# function that generates the 5 set of constraints for the sudoku puzzle
+def gen_contraints(variables, n, rows_per_block, columns_per_block, symbols):
+
+    # list with the clauses (constraints)
+    clauses = []
+
+    # length of list of symbols (which is equal to the dimension of the grid)
+    len_symbols = len(symbols)
+
+
+    # set 1: every cell must have at least one value (symbol)
+    for i in range(n):
+        for j in range(n):
+            disjunction = []
+            for v in symbols:
+                literal = "cell_has_value([%d, %d], %c)" % (i + 1, j + 1, v)
+                disjunction.append(variables[literal])
+
+            clauses.append(disjunction)
+
+
+    # set 2: every cell cannot have 2 values
+    for i in range(n):
+        for j in range(n):
+            for v1 in range(len_symbols):
+                literal1 = "cell_has_value([%d, %d], %c)" % (i + 1, j + 1, symbols[v1])
+                for v2 in range(v1 + 1, len_symbols):
+                    literal2 = "cell_has_value([%d, %d], %c)" % (i + 1, j + 1, symbols[v2])
+                    clauses.append([-variables[literal1], -variables[literal2]])
+
+
+
+    # set 3: every row must contain all symbols once <=> no 2 cells in the same row can have the same symbol
+    for i in range(n):
+        for j1 in range(n):
+            for j2 in range(j1 + 1, n):
+                for v in symbols:
+                    literal1 = "cell_has_value([%d, %d], %c)" % (i + 1, j1 + 1, v)
+                    literal2 = "cell_has_value([%d, %d], %c)" % (i + 1, j2 + 1, v)
+                    clauses.append([-variables[literal1], -variables[literal2]])
+
+
+
+    # set 4: every column must contain all symbols once <=> no 2 cells in the same column can have the same symbol
+    for j in range(n):
+        for i1 in range(n):
+            for i2 in range(i1 + 1, n):
+                for v in symbols:
+                    literal1 = "cell_has_value([%d, %d], %c)" % (i1 + 1, j + 1, v)
+                    literal2 = "cell_has_value([%d, %d], %c)" % (i1 + 1, j + 1, v)
+                    clauses.append([-variables[literal1], -variables[literal2]])
+
+
+    # set 5: every block must contain all symbols once <=> no 2 cells in the same block can have the same symbol (if blocks exist)
+    
+
+
+    print len(clauses)
+    # return all the clauses (constraints)
+    return clauses
 
 
 
@@ -213,5 +274,5 @@ if __name__ == '__main__':
     print cell_values
 
     variables = gen_vars(n, symbols)
-    print 'test'
+    constraints = gen_contraints(variables, n, rows_per_block, columns_per_block, symbols)
     # print variables
