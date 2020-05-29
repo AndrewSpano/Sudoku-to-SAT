@@ -1,4 +1,4 @@
-# relative path to the solver; change here if you I send you only this file
+# relative path to the solver; change here for your path
 solver = "../../../build/cadical"
 
 import sys
@@ -90,6 +90,9 @@ def parse_input(input_file_name = "input_sudoku.txt"):
         # abort
         sys.exit(1)
 
+
+    # skip one line due to the format of the file
+    line = input_file.readline()
 
 
     # dictionary to store the values of the cells; it's keys are tuples of the form (row, column)
@@ -185,6 +188,25 @@ def gen_vars(n, symbols):
 
 
 
+
+# function that takes the cell values that we already have, and transforms them into clauses
+def gen_given(variables, cell_values):
+
+    # create a list that will contain the literals
+    literals = []
+
+    # iterate through the dictionary of the known puzzle to translate it
+    for key, value in cell_values.iteritems():
+        literal = "cell_has_value([%d, %d], %c)" % (key[0], key[1], value)
+        literals.append([variables[literal]])
+
+    # return the list of true clauses (literals)
+    return literals
+
+
+
+
+
 # function that generates the 5 set of constraints for the sudoku puzzle
 def gen_contraints(variables, n, rows_per_block, columns_per_block, symbols):
 
@@ -204,6 +226,7 @@ def gen_contraints(variables, n, rows_per_block, columns_per_block, symbols):
                 disjunction.append(variables[literal])
 
             clauses.append(disjunction)
+
 
 
     # set 2: every cell cannot have 2 values
@@ -228,23 +251,90 @@ def gen_contraints(variables, n, rows_per_block, columns_per_block, symbols):
 
 
 
+
     # set 4: every column must contain all symbols once <=> no 2 cells in the same column can have the same symbol
     for j in range(n):
         for i1 in range(n):
             for i2 in range(i1 + 1, n):
                 for v in symbols:
                     literal1 = "cell_has_value([%d, %d], %c)" % (i1 + 1, j + 1, v)
-                    literal2 = "cell_has_value([%d, %d], %c)" % (i1 + 1, j + 1, v)
+                    literal2 = "cell_has_value([%d, %d], %c)" % (i2 + 1, j + 1, v)
                     clauses.append([-variables[literal1], -variables[literal2]])
 
 
+
+
     # set 5: every block must contain all symbols once <=> no 2 cells in the same block can have the same symbol (if blocks exist)
-    
+    if rows_per_block > 1 and columns_per_block > 1:
+        for i in range(0, n, rows_per_block):
+            for j in range(0, n, columns_per_block):
+                for i1 in range(i, i + rows_per_block):
+                    for j1 in range(j, j + columns_per_block):
+                        for i2 in range(i1, i + rows_per_block):
+                            for j2 in range(j, j + rows_per_block):
+                                if i1 == i2 and j2 <= j1:
+                                    continue
+                                for v in symbols:
+                                    literal1 = "cell_has_value([%d, %d], %c)" % (i1 + 1, j1 + 1, v)
+                                    literal2 = "cell_has_value([%d, %d], %c)" % (i2 + 1, j2 + 1, v)
+                                    clauses.append([-variables[literal1], -variables[literal2]])
 
 
-    print len(clauses)
     # return all the clauses (constraints)
     return clauses
+
+
+
+
+
+# A helper function to print the cnf header
+def printHeader(n):
+    global gbi
+    return "p cnf %d %d" % (gbi, n)
+
+
+
+
+
+# A helper function to print a set of clauses cls
+def printCnf(cls):
+    return "\n".join(map(lambda x: "%s 0" % " ".join(map(str, x)), cls))
+
+
+
+
+# A helper function to print the solved sudoku
+def print_solution(facts, n, rows_per_block, columns_per_block):
+
+    # number of characacters in a line
+    length_of_line = 2 * (n + n/columns_per_block - 1) -1
+
+    # build a dictionary with the facts
+    solutions = {}
+    for fact in facts:
+        i, j = [int(fact[16]), int(fact[19])]
+        value = fact[23]
+        solutions[(i, j)] = value
+
+    # for each row (line)
+    for i in range(n):
+        # print a line of dashes if we have to
+        if i % rows_per_block == 0 and i > 0 and rows_per_block > 1:
+            print "-" * length_of_line
+
+        # for each columns
+        for j in range(n):
+            # if a block has reached it's limit, print "|"
+            if j % columns_per_block == 0 and j > 0 and columns_per_block > 1:
+                print "|",
+
+            # print the character (and a space if the columns have not finished)
+            if j < n - 1:
+                print solutions[(i + 1, j + 1)],
+            else:
+                print solutions[(i + 1, j + 1)]
+
+
 
 
 
@@ -267,12 +357,49 @@ if __name__ == '__main__':
     symbols = input[3]
     cell_values = input[4]
 
-    print n
-    print rows_per_block
-    print columns_per_block
-    print symbols
-    print cell_values
-
+    # generate the variables
     variables = gen_vars(n, symbols)
+    # generate clauses for given sudoku
+    given = gen_given(variables, cell_values)
+    # generate constraints
     constraints = gen_contraints(variables, n, rows_per_block, columns_per_block, symbols)
-    # print variables
+
+    # first line of the file that contains the cnf encoding
+    head = printHeader(len(given) + len(constraints))
+    # given clauses in the correct form
+    given_as_cnf = printCnf(given)
+    # constraints expressed in the correct form
+    constraints_as_cnf = printCnf(constraints)
+
+    # open the file that will contain the input for cadical
+    fl = open("sukodu_encoding.cnf", "w")
+    # write in the file
+    fl.write("\n".join([head, given_as_cnf, constraints_as_cnf]))
+    # close the file
+    fl.close()
+
+
+    # this is for runing solver
+    ms_out = Popen([solver, "sukodu_encoding.cnf"], stdout = PIPE).communicate()[0]
+
+
+
+
+    # here we check the result from stdout
+    mo = re.search("s SATISFIABLE", ms_out)
+    if mo == None:
+        print("Unsatisfiable")
+    if mo:
+        print("Satisfiable")
+        solutions = " ".join(map(lambda x: x[2:], filter(lambda x: len(x) > 0 and x[0] == 'v', ms_out.split("\n"))))
+
+        # Read the solution
+        solutions = map(int, solutions.split())
+
+        # Convert the solution to our names
+        facts = map(lambda x: varToStr[abs(x)], filter(lambda x: x > 0, solutions[:-1]))
+
+        # Print the solution
+        print "\n"
+        print_solution(facts, n, rows_per_block, columns_per_block)
+        print "\n"
