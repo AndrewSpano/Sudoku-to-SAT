@@ -312,8 +312,17 @@ def print_solution(facts, n, rows_per_block, columns_per_block):
     # build a dictionary with the facts
     solutions = {}
     for fact in facts:
-        i, j = [int(fact[16]), int(fact[19])]
-        value = fact[23]
+
+        # get the coordinates
+        res = re.findall(r'\d+', fact)
+        # for the position of the value (symbol)
+        pos = fact.find("],") + 3
+
+        # get the values
+        i, j = [int(res[0]), int(res[1])]
+        value = fact[pos]
+
+        # update the dictionary
         solutions[(i, j)] = value
 
     # for each row (line)
@@ -348,7 +357,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # read the input file
-    input = parse_input("input_sudoku.txt")
+    input = parse_input("input_sudoku3.txt")
 
     # assign the input to the correct variables
     n = input[0]
