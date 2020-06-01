@@ -280,6 +280,7 @@ def gen_contraints(variables, n, rows_per_block, columns_per_block, symbols):
                                     clauses.append([-variables[literal1], -variables[literal2]])
 
 
+
     # return all the clauses (constraints)
     return clauses
 
@@ -356,8 +357,16 @@ if __name__ == '__main__':
         print "\nSet the path to solver correctly on line 2 of this file (%s).\n" % sys.argv[0]
         sys.exit(1)
 
+
+    # This is for reading in the arguments.
+    if len(sys.argv) != 2:
+        print "\nThe script should be run with the following format: python sudoku_to_sat.py input_file.txt\n"
+        sys.exit(1)
+
+    input_file_name = sys.argv[1]
+
     # read the input file
-    input = parse_input("input_sudoku3.txt")
+    input = parse_input(input_file_name)
 
     # assign the input to the correct variables
     n = input[0]
