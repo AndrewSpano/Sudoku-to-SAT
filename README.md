@@ -23,13 +23,13 @@ $ pwd
 
 ## How to setup the script for your machine
 
-Go to the [sudoku_to_sat.py](Sudoku_to_SAT/sudoku_to_sat.py) python script and change the second line to match the path of the CaDiCaL SAT solver in your machine.
+Go to the [sudoku_to_sat.py](Sudoku_to_SAT/src/sudoku_to_sat.py) python script and change the second line to match the path of the CaDiCaL SAT solver in your machine.
 
 
 
 ## How to run the script
 
-Be in the [directory](Sudoku_to_SAT) that contains [sudoku_to_sat.py](Sudoku_to_SAT/sudoku_to_sat.py), and run the command
+Be in the [directory](Sudoku_to_SAT/src) that contains [sudoku_to_sat.py](Sudoku_to_SAT/src/sudoku_to_sat.py), and run the command
 ```shell
 $ python sudoku_to_sat.py <input_file>
 ```
@@ -37,7 +37,7 @@ $ python sudoku_to_sat.py <input_file>
 where <input_file> is the file containing the Sudoku puzzle that you want to solve (more on the input file below).  
 For example, to use the puzzles already provided in this repository, you can run
 ```shell
-$ python sudoku_to_sat.py Examples/input_sudoku.txt
+$ python sudoku_to_sat.py ../Examples/input_sudoku.txt
 ```
 and the solution will be printed in stdout.
 
@@ -66,10 +66,10 @@ You can also take a look directly at the [file](Sudoku_to_SAT/Examples/input_sud
 The basic idea of the script can be described in the steps below:  
 1. Read and parse input from a file.
 2. Convert the problem to CNF clauses.
-3. Write the CNF clauses in a file, in a format so that CaDiCaL understands them.
+3. Write the CNF clauses in a file (in the directory [Encoding](Sudoku_to_SAT/Encoding)), in a format so that CaDiCaL understands them.
 4. Feed the file to CaDiCaL.
 5. Read the output of CaDiCaL to see if a solution exists. If it exists, print it; else print that the problem is unsatisfiable.
 
 
-You can take a look at the [report](Sudoku_to_SAT/report.pdf) I have written for implementation details and for matters regarding the logic/complexity of the conversion.
+You can take a look at the [report](Sudoku_to_SAT/Report/report.pdf) I have written for implementation details and for matters regarding the logic/complexity of the conversion.
 
