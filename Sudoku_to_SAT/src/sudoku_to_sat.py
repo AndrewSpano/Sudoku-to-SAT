@@ -1,5 +1,5 @@
 # relative path to the solver; change here for your path
-solver = "../../../build/cadical"
+solver = "../../../cadical-1.0.3-cb89cbf/build/cadical"
 
 import sys
 from subprocess import Popen
@@ -390,7 +390,7 @@ if __name__ == '__main__':
     constraints_as_cnf = printCnf(constraints)
 
     # open the file that will contain the input for cadical
-    fl = open("sukodu_encoding.cnf", "w")
+    fl = open("../Encoding/sukodu_encoding.cnf", "w")
     # write in the file
     fl.write("\n".join([head, given_as_cnf, constraints_as_cnf]))
     # close the file
@@ -398,7 +398,7 @@ if __name__ == '__main__':
 
 
     # this is for runing solver
-    ms_out = Popen([solver, "sukodu_encoding.cnf"], stdout = PIPE).communicate()[0]
+    ms_out = Popen([solver, "../Encoding/sukodu_encoding.cnf"], stdout = PIPE).communicate()[0]
 
 
 
